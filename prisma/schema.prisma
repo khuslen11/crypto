@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model api_user {
+  user_id  Int      @id @default(autoincrement())
+  name     String
+  email    String   @unique
+  password String
+  api_key  api_key?
+}
+
+model api_key {
+  api_key_id  Int       @id @default(autoincrement())
+  api_key_val String    @unique @default(uuid())
+  owner_id    Int       @unique
+  api_plan    api_plan? 
+  user        api_user  @relation(fields: [owner_id], references: [user_id])
+  api_logs    api_logs[]
+}
+
+model api_plan {
+  api_plan_id   Int       @id @default(autoincrement())
+  plan_name     String    @default("free")
+  plan_limit    Int       @default(10000)
+  plan_key_id   Int       @unique
+  key_relation  api_key   @relation(fields: [plan_key_id], references: [api_key_id])
+}
+
+model api_logs {
+  log_id      Int         @id @default(autoincrement())
+  used_date   DateTime    @default(now())
+  credit_cost Int         @default(1)
+  log_key_id  Int         @unique
+  key         api_key     @relation(fields: [log_key_id], references: [api_key_id])
+}
